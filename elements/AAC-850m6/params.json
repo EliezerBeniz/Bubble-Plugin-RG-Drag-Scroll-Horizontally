@@ -1,0 +1,35 @@
+{
+    "add_is_visible": true,
+    "category": "visual elements",
+    "default_dim": {
+        "height": 15,
+        "width": 15
+    },
+    "display": "RG Scroll",
+    "fields": {
+        "AAD": {
+            "caption": "element_id",
+            "default_val": "rg1",
+            "doc": "Element ID to be enabled for drag scroll",
+            "editor": "DynamicValue",
+            "is_list": false,
+            "name": "element_id",
+            "rank": 0,
+            "value": "text"
+        },
+        "AAE": {
+            "caption": "hide_scrollbar",
+            "default_val": false,
+            "doc": "Hide the scrollbar?",
+            "editor": "DynamicValue",
+            "name": "hide_scrollbar",
+            "rank": 1,
+            "value": "boolean"
+        }
+    },
+    "icon": "ion-arrow-swap",
+    "platform_type": "web",
+    "property_applications": {
+        "resizable": true
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "categories": {
+        "0": "containers",
+        "1": "social network",
+        "2": "mobile"
+    },
+    "data_tracked": false,
+    "description": "This plugin enables drag scrolling for elements with a specified ID. It allows users to click and drag to scroll horizontally, improving navigation on touchpads and desktop devices. Additionally, it provides an option to hide the scrollbar for a cleaner UI. Mobile devices are detected to prevent unnecessary modifications.",
+    "image": "//meta-q.cdn.bubble.io/f1738713623649x698179220592858100/scroll.gif",
+    "license": "open_source",
+    "name": "RG Drag Scroll Horizontally"
+}
