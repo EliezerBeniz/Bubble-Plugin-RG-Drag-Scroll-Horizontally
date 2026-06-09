@@ -10,7 +10,7 @@
         "AAD": {
             "caption": "element_id",
             "default_val": "rg1",
-            "doc": "Element ID to be enabled for drag scroll",
+            "doc": "The ID attribute of the Repeating Group or scrollable container that should receive drag-to-scroll behavior and the Kanban minimap navigation.",
             "editor": "DynamicValue",
             "is_list": false,
             "name": "element_id",
@@ -20,11 +20,28 @@
         "AAE": {
             "caption": "hide_scrollbar",
             "default_val": false,
-            "doc": "Hide the scrollbar?",
+            "doc": "Hides the native horizontal scrollbar while preserving all scrolling functionality, creating a cleaner Kanban board experience.",
             "editor": "DynamicValue",
             "name": "hide_scrollbar",
             "rank": 1,
             "value": "boolean"
+        },
+        "AAG": {
+            "caption": "show_minimap",
+            "default_val": true,
+            "doc": "Displays a floating Kanban minimap that provides an overview of all columns and indicates the currently visible area. Users can drag the highlighted area to navigate horizontally.",
+            "editor": "Checkbox",
+            "name": "show_minimap",
+            "rank": 2
+        },
+        "AAH": {
+            "caption": "minimap_color",
+            "default_val": "rgba(0,108,255,1)",
+            "doc": "Defines the color of the minimap viewport indicator (the highlighted visible area). If left empty, the default color (#006CFF) will be used.",
+            "editor": "Color",
+            "name": "minimap_color",
+            "optional": true,
+            "rank": 3
         }
     },
     "icon": "ion-arrow-swap",
