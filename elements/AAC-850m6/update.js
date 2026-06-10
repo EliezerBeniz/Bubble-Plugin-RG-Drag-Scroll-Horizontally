@@ -1,8 +1,17 @@
 function(instance, properties) {
+
+    // =====================================================
+    // 1. BASIC SETTINGS
+    // =====================================================
+
     var elementId = properties.element_id;
     var hideScrollbar = properties.hide_scrollbar;
     var showMiniMap = properties.show_minimap;
     var miniMapColor = properties.minimap_color || "#006cff";
+
+    // Optional field. Create this as yes/no if you want.
+    var showEdgeIndicators = properties.show_edge_indicators !== false;
+
     var a = document.querySelector("#" + elementId);
 
     if (!a) {
@@ -18,6 +27,11 @@ function(instance, properties) {
     instance.data.currentElementId = elementId;
 
     a.style.cursor = "move";
+
+
+    // =====================================================
+    // 2. HIDE NATIVE SCROLLBAR
+    // =====================================================
 
     if (hideScrollbar) {
         if (!document.getElementById("hide-scrollbar-" + elementId)) {
@@ -36,6 +50,11 @@ function(instance, properties) {
             document.head.appendChild(style);
         }
     }
+
+
+    // =====================================================
+    // 3. DRAG TO SCROLL ON REPEATING GROUP
+    // =====================================================
 
     var isDragging = false;
     var startX = 0;
@@ -58,7 +77,9 @@ function(instance, properties) {
         var movement = x - startX;
 
         a.scrollLeft = scrollStart - movement;
+
         updateMiniMap();
+        updateEdgeIndicators();
     });
 
     a.addEventListener("mouseleave", function() {
@@ -72,52 +93,171 @@ function(instance, properties) {
         a.style.cursor = "move";
         document.body.style.userSelect = "auto";
     });
-    
-    if (showMiniMap === false) {
-        var existingMiniMap = document.getElementById("kanban-minimap-wrapper-" + elementId);
-        if (existingMiniMap) {
-            existingMiniMap.remove();
-        }
-        return;
+
+
+    // =====================================================
+    // 4. PREPARE PARENT CONTAINER
+    // =====================================================
+
+    var parent = a.parentNode;
+
+    if (getComputedStyle(parent).position === "static") {
+        parent.style.position = "relative";
     }
 
-    // =========================
-    // MINI MAP SCROLL
-    // =========================
+
+    // =====================================================
+    // 5. EDGE INDICATORS / SCROLL SHADOWS
+    // =====================================================
+
+    var oldLeftIndicator = document.getElementById("kanban-left-indicator-" + elementId);
+    var oldRightIndicator = document.getElementById("kanban-right-indicator-" + elementId);
+    
+    var edgeIndicatorColor = properties.edge_indicator_color || "#000000";
+    var edgeIndicatorOpacity = properties.edge_indicator_opacity || 0.14;
+
+    if (oldLeftIndicator) oldLeftIndicator.remove();
+    if (oldRightIndicator) oldRightIndicator.remove();
+
+    var leftIndicator = document.createElement("div");
+    leftIndicator.id = "kanban-left-indicator-" + elementId;
+
+    leftIndicator.style.position = "absolute";
+    leftIndicator.style.left = "0";
+    leftIndicator.style.top = "0";
+    leftIndicator.style.bottom = hideScrollbar ? "0" : "16px";
+    leftIndicator.style.width = "32px";
+    leftIndicator.style.zIndex = "9998";
+    leftIndicator.style.pointerEvents = "none";
+    leftIndicator.style.opacity = "0";
+    leftIndicator.style.transition = "opacity 180ms ease";
+    leftIndicator.style.display = "block";
+    leftIndicator.style.background =
+      "linear-gradient(to right, " +
+      hexToRgba(edgeIndicatorColor, edgeIndicatorOpacity) +
+      ", rgba(0,0,0,0))";
+
+    var rightIndicator = document.createElement("div");
+    rightIndicator.id = "kanban-right-indicator-" + elementId;
+
+    rightIndicator.style.position = "absolute";
+    rightIndicator.style.right = "0";
+    rightIndicator.style.top = "0";
+    rightIndicator.style.bottom = hideScrollbar ? "0" : "16px";
+    rightIndicator.style.width = "32px";
+    rightIndicator.style.zIndex = "9998";
+    rightIndicator.style.pointerEvents = "none";
+    rightIndicator.style.opacity = "0";
+    rightIndicator.style.transition = "opacity 180ms ease";
+    rightIndicator.style.display = "block";
+    rightIndicator.style.background =
+      "linear-gradient(to left, " +
+      hexToRgba(edgeIndicatorColor, edgeIndicatorOpacity) +
+      ", rgba(0,0,0,0))";
+
+    if (showEdgeIndicators) {
+        parent.appendChild(leftIndicator);
+        parent.appendChild(rightIndicator);
+    }
+
+    function updateEdgeIndicators() {
+        if (!showEdgeIndicators) return;
+
+        var totalWidth = a.scrollWidth;
+        var visibleWidth = a.clientWidth;
+        var scrollLeft = a.scrollLeft;
+
+        if (!totalWidth || !visibleWidth || totalWidth <= visibleWidth + 2) {
+            leftIndicator.style.opacity = "0";
+            rightIndicator.style.opacity = "0";
+            return;
+        }
+
+        var hasHiddenLeft = scrollLeft > 2;
+        var hasHiddenRight = scrollLeft + visibleWidth < totalWidth - 2;
+
+        leftIndicator.style.opacity = hasHiddenLeft ? "1" : "0";
+        rightIndicator.style.opacity = hasHiddenRight ? "1" : "0";
+    }
+
+
+    // =====================================================
+    // 6. MINIMAP VISIBILITY CONTROL
+    // =====================================================
 
     var oldWrapper = document.getElementById("kanban-minimap-wrapper-" + elementId);
+
     if (oldWrapper) {
         oldWrapper.remove();
     }
 
+    if (showMiniMap === false) {
+        updateEdgeIndicators();
+
+        a.addEventListener("scroll", updateEdgeIndicators);
+
+        setTimeout(updateEdgeIndicators, 100);
+        setTimeout(updateEdgeIndicators, 500);
+        setTimeout(updateEdgeIndicators, 1000);
+
+        return;
+    }
+
+
+    // =====================================================
+    // 7. MINIMAP WRAPPER
+    // =====================================================
+
     var wrapper = document.createElement("div");
     wrapper.id = "kanban-minimap-wrapper-" + elementId;
 
-    wrapper.style.width = "110px";
-    wrapper.style.height = "34px";
-    wrapper.style.border = "1px solid #d9d9d9";
+    wrapper.style.width = "112px";
+    wrapper.style.height = "48px";
+    wrapper.style.padding = "5px";
+    wrapper.style.border = "1px solid #ececec";
     wrapper.style.borderRadius = "6px";
     wrapper.style.background = "#fff";
     wrapper.style.boxShadow = "0 2px 8px rgba(0,0,0,0.12)";
     wrapper.style.position = "absolute";
-    wrapper.style.right = "12px";
-    wrapper.style.bottom = hideScrollbar ? "12px" : "32px";
+    wrapper.style.right = "24px";
+    wrapper.style.bottom = hideScrollbar ? "12px" : "28px";
     wrapper.style.zIndex = "9999";
     wrapper.style.overflow = "hidden";
+    wrapper.style.boxSizing = "border-box";
     wrapper.style.cursor = "default";
-    wrapper.style.pointerEvents = "auto";
+    wrapper.style.opacity = "0.75";
+
+    wrapper.addEventListener("mouseenter", function() {
+        wrapper.style.opacity = "1";
+    });
+
+    wrapper.addEventListener("mouseleave", function() {
+        wrapper.style.opacity = "0.75";
+    });
+
+
+    // =====================================================
+    // 8. MINIMAP COLUMNS BACKGROUND
+    // =====================================================
 
     var columnsLayer = document.createElement("div");
+
     columnsLayer.style.position = "absolute";
-    columnsLayer.style.left = "6px";
-    columnsLayer.style.right = "6px";
+    columnsLayer.style.left = "5px";
+    columnsLayer.style.right = "5px";
     columnsLayer.style.top = "5px";
     columnsLayer.style.bottom = "5px";
     columnsLayer.style.display = "flex";
     columnsLayer.style.gap = "2px";
+    columnsLayer.style.pointerEvents = "none";
+
+
+    // =====================================================
+    // 9. COLOR HELPER
+    // =====================================================
 
     function hexToRgba(hex, opacity) {
-        hex = hex.replace("#", "");
+        hex = String(hex || "#006cff").replace("#", "");
 
         if (hex.length === 3) {
             hex = hex.split("").map(function(char) {
@@ -129,13 +269,43 @@ function(instance, properties) {
         var g = parseInt(hex.substring(2, 4), 16);
         var b = parseInt(hex.substring(4, 6), 16);
 
+        if (isNaN(r) || isNaN(g) || isNaN(b)) {
+            return "rgba(0,108,255," + opacity + ")";
+        }
+
+        return "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+    }
+    
+    function hexToRgba(hex, opacity) {
+        hex = String(hex || "#000000").replace("#", "");
+
+        if (hex.length === 3) {
+            hex = hex.split("").map(function(char) {
+                return char + char;
+            }).join("");
+        }
+
+        var r = parseInt(hex.substring(0, 2), 16);
+        var g = parseInt(hex.substring(2, 4), 16);
+        var b = parseInt(hex.substring(4, 6), 16);
+
+        if (isNaN(r) || isNaN(g) || isNaN(b)) {
+            return "rgba(0,0,0," + opacity + ")";
+        }
+
         return "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
     }
 
+
+    // =====================================================
+    // 10. MINIMAP CURRENT VIEWPORT
+    // =====================================================
+
     var viewport = document.createElement("div");
+
     viewport.style.position = "absolute";
-    viewport.style.top = "4px";
-    viewport.style.height = "24px";
+    viewport.style.top = "5px";
+    viewport.style.height = "calc(100% - 10px)";
     viewport.style.border = "2px solid " + miniMapColor;
     viewport.style.borderRadius = "3px";
     viewport.style.background = hexToRgba(miniMapColor, 0.05);
@@ -144,14 +314,12 @@ function(instance, properties) {
 
     wrapper.appendChild(columnsLayer);
     wrapper.appendChild(viewport);
-
-    var parent = a.parentNode;
-
-    if (getComputedStyle(parent).position === "static") {
-        parent.style.position = "relative";
-    }
-
     parent.appendChild(wrapper);
+
+
+    // =====================================================
+    // 11. RENDER MINIMAP COLUMNS
+    // =====================================================
 
     function renderColumns() {
         columnsLayer.innerHTML = "";
@@ -171,6 +339,11 @@ function(instance, properties) {
         }
     }
 
+
+    // =====================================================
+    // 12. UPDATE MINIMAP POSITION
+    // =====================================================
+
     function updateMiniMap() {
         var totalWidth = a.scrollWidth;
         var visibleWidth = a.clientWidth;
@@ -183,7 +356,8 @@ function(instance, properties) {
         wrapper.style.display = "block";
 
         var scrollLeft = a.scrollLeft;
-        var mapWidth = wrapper.clientWidth;
+        var horizontalPadding = 10;
+        var mapWidth = wrapper.clientWidth - horizontalPadding;
 
         var ratioVisible = visibleWidth / totalWidth;
         var viewportWidth = Math.max(18, mapWidth * ratioVisible);
@@ -196,28 +370,33 @@ function(instance, properties) {
             : 0;
 
         viewport.style.width = viewportWidth + "px";
-        viewport.style.left = viewportLeft + "px";
+        viewport.style.left = (viewportLeft + 5) + "px";
     }
 
-    function refreshMiniMap() {
+
+    // =====================================================
+    // 13. REFRESH ALL VISUAL HELPERS
+    // =====================================================
+
+    function refreshAll() {
         renderColumns();
         updateMiniMap();
+        updateEdgeIndicators();
     }
 
-    a.addEventListener("scroll", updateMiniMap);
-
-    window.addEventListener("resize", function() {
-        refreshMiniMap();
+    a.addEventListener("scroll", function() {
+        updateMiniMap();
+        updateEdgeIndicators();
     });
 
-    setTimeout(refreshMiniMap, 100);
-    setTimeout(refreshMiniMap, 500);
-    setTimeout(refreshMiniMap, 1000);
+    window.addEventListener("resize", refreshAll);
+
+    setTimeout(refreshAll, 100);
+    setTimeout(refreshAll, 500);
+    setTimeout(refreshAll, 1000);
 
     if (window.ResizeObserver) {
-        var observer = new ResizeObserver(function() {
-            refreshMiniMap();
-        });
+        var observer = new ResizeObserver(refreshAll);
 
         observer.observe(a);
 
@@ -226,7 +405,12 @@ function(instance, properties) {
         }
     }
 
-    refreshMiniMap();
+    refreshAll();
+
+
+    // =====================================================
+    // 14. DRAG MINIMAP BLUE AREA
+    // =====================================================
 
     var draggingMiniMap = false;
     var miniStartX = 0;
@@ -235,7 +419,7 @@ function(instance, properties) {
     viewport.addEventListener("mousedown", function(e) {
         draggingMiniMap = true;
         miniStartX = e.clientX;
-        miniStartLeft = parseFloat(viewport.style.left) || 0;
+        miniStartLeft = parseFloat(viewport.style.left) || 5;
         viewport.style.cursor = "move";
 
         e.preventDefault();
@@ -247,11 +431,12 @@ function(instance, properties) {
 
         var delta = e.clientX - miniStartX;
 
-        var mapWidth = wrapper.clientWidth;
+        var horizontalPadding = 10;
+        var mapWidth = wrapper.clientWidth - horizontalPadding;
         var viewportWidth = viewport.offsetWidth;
         var maxLeft = mapWidth - viewportWidth;
 
-        var newLeft = Math.max(0, Math.min(maxLeft, miniStartLeft + delta));
+        var newLeft = Math.max(0, Math.min(maxLeft, miniStartLeft - 5 + delta));
 
         var totalWidth = a.scrollWidth;
         var visibleWidth = a.clientWidth;
@@ -262,10 +447,11 @@ function(instance, properties) {
         a.scrollLeft = maxScroll * ratio;
 
         updateMiniMap();
+        updateEdgeIndicators();
     });
 
     document.addEventListener("mouseup", function() {
         draggingMiniMap = false;
-        viewport.style.cursor = "grab";
+        viewport.style.cursor = "move";
     });
 }

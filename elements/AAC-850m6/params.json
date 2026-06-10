@@ -19,12 +19,11 @@
         },
         "AAE": {
             "caption": "hide_scrollbar",
-            "default_val": false,
+            "default_val": true,
             "doc": "Hides the native horizontal scrollbar while preserving all scrolling functionality, creating a cleaner Kanban board experience.",
-            "editor": "DynamicValue",
+            "editor": "Checkbox",
             "name": "hide_scrollbar",
-            "rank": 1,
-            "value": "boolean"
+            "rank": 1
         },
         "AAG": {
             "caption": "show_minimap",
@@ -42,6 +41,30 @@
             "name": "minimap_color",
             "optional": true,
             "rank": 3
+        },
+        "AAI": {
+            "caption": "show_edge_indicators",
+            "default_val": true,
+            "doc": "Shows subtle left and right edge indicators when there is hidden content outside the visible scroll area.",
+            "editor": "Checkbox",
+            "name": "show_edge_indicators",
+            "rank": 4
+        },
+        "AAJ": {
+            "caption": "edge_indicator_color",
+            "default_val": "rgba(227,227,227,1)",
+            "doc": "Defines the color of the left and right edge indicators. If empty, a subtle dark gray shadow is used.",
+            "editor": "Color",
+            "name": "edge_indicator_color",
+            "rank": 5
+        },
+        "AAK": {
+            "caption": "edge_indicator_opacity",
+            "default_val": 0.14,
+            "doc": "Controls the opacity of the edge indicator shadow. Recommended values: 0.08 to 0.20.",
+            "editor": "StaticNumber",
+            "name": "edge_indicator_opacity",
+            "rank": 6
         }
     },
     "icon": "ion-arrow-swap",
